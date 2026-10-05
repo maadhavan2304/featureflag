@@ -1,0 +1,26 @@
+# Starts MySQL 8.0 and Redis for local development.
+#   docker compose up -d
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: ff-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: featureflags
+      MYSQL_USER: ffuser
+      MYSQL_PASSWORD: ffpass
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    ports: ["3306:3306"]
+    volumes: ["mysql_data:/var/lib/mysql"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-prootpass"]
+      interval: 5s
+      retries: 20
+  redis:
+    image: redis:7-alpine
+    container_name: ff-redis
+    restart: unless-stopped
+    ports: ["6379:6379"]
+volumes:
+  mysql_data:

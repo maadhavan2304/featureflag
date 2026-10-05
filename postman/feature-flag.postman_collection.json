@@ -1,0 +1,1061 @@
+{
+  "info": {
+    "name": "Feature Flag & Environment Management",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Run 'Auth > Login' first. Then 'Environments > List' (copy an sdk_key into the sdkKey variable). Flag IDs are stored automatically."
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api/v1"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "refreshToken",
+      "value": ""
+    },
+    {
+      "key": "flagId",
+      "value": "1"
+    },
+    {
+      "key": "rolloutId",
+      "value": "1"
+    },
+    {
+      "key": "envId",
+      "value": "1"
+    },
+    {
+      "key": "sdkKey",
+      "value": ""
+    },
+    {
+      "key": "assignmentId",
+      "value": "1"
+    },
+    {
+      "key": "auditId",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "admin"
+                },
+                {
+                  "key": "password",
+                  "value": "Admin@12345"
+                }
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set('accessToken', j.access_token);",
+                  "pm.collectionVariables.set('refreshToken', j.refresh_token);",
+                  "pm.test('login ok', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{refreshToken}}\"\n}"
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set('accessToken', j.access_token);",
+                  "pm.collectionVariables.set('refreshToken', j.refresh_token);",
+                  "pm.test('login ok', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Current user",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users & Roles",
+      "item": [
+        {
+          "name": "List roles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/roles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "roles"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create user",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"dev@example.com\",\n  \"username\": \"dev1\",\n  \"password\": \"Passw0rd!\",\n  \"role_id\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "Update user",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "2"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_active\": true,\n  \"role_id\": 2\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Environments",
+      "item": [
+        {
+          "name": "List environments (admin sees SDK keys)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/environments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "environments"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const e = pm.response.json()[0];",
+                  "pm.collectionVariables.set('envId', e.id);",
+                  "if (e.sdk_key) pm.collectionVariables.set('sdkKey', e.sdk_key);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create environment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/environments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "environments"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Staging\",\n  \"key\": \"staging\",\n  \"description\": \"Pre-prod\",\n  \"is_production\": false\n}"
+            }
+          }
+        },
+        {
+          "name": "Update environment",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/environments/{{envId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "environments",
+                "{{envId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Rotate SDK key",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/environments/{{envId}}/rotate-sdk-key",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "environments",
+                "{{envId}}",
+                "rotate-sdk-key"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Feature Flags",
+      "item": [
+        {
+          "name": "List flags",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/flags",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "flags"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": ""
+                },
+                {
+                  "key": "include_archived",
+                  "value": "false"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create flag",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/flags",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "flags"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"new-feature\",\n  \"name\": \"New feature\",\n  \"description\": \"Demo flag\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set('flagId', j.id);",
+                  "pm.collectionVariables.set('rolloutId', j.rollouts[0].id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get flag",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/flags/{{flagId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "flags",
+                "{{flagId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Edit flag",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/flags/{{flagId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "flags",
+                "{{flagId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New feature (renamed)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Archive flag",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/flags/{{flagId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "flags",
+                "{{flagId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_archived\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Flag history",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/flags/{{flagId}}/history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "flags",
+                "{{flagId}}",
+                "history"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Test evaluate (not counted)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/flags/{{flagId}}/test-evaluate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "flags",
+                "{{flagId}}",
+                "test-evaluate"
+              ],
+              "query": [
+                {
+                  "key": "environment_id",
+                  "value": "{{envId}}"
+                },
+                {
+                  "key": "user_id",
+                  "value": "user-123"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete flag",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/flags/{{flagId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "flags",
+                "{{flagId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rollouts",
+      "item": [
+        {
+          "name": "Enable flag",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rollouts/{{rolloutId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rollouts",
+                "{{rolloutId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enabled\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Disable flag",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rollouts/{{rolloutId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rollouts",
+                "{{rolloutId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enabled\": false\n}"
+            }
+          }
+        },
+        {
+          "name": "Set 25% rollout",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rollouts/{{rolloutId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rollouts",
+                "{{rolloutId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enabled\": true,\n  \"rollout_percentage\": 25\n}"
+            }
+          }
+        },
+        {
+          "name": "Schedule activation",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rollouts/{{rolloutId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rollouts",
+                "{{rolloutId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scheduled_enable_at\": \"2030-01-01T09:00:00Z\",\n  \"scheduled_disable_at\": \"2030-01-08T09:00:00Z\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Clear schedule",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rollouts/{{rolloutId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rollouts",
+                "{{rolloutId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scheduled_enable_at\": null,\n  \"scheduled_disable_at\": null\n}"
+            }
+          }
+        },
+        {
+          "name": "Rollback last change",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rollouts/{{rolloutId}}/rollback",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rollouts",
+                "{{rolloutId}}",
+                "rollback"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Rollback a specific change",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rollouts/{{rolloutId}}/rollback",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rollouts",
+                "{{rolloutId}}",
+                "rollback"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"audit_log_id\": \"{{auditId}}\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User Assignments",
+      "item": [
+        {
+          "name": "Allow a user",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/flags/{{flagId}}/assignments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "flags",
+                "{{flagId}}",
+                "assignments"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"environment_id\": \"{{envId}}\",\n  \"user_identifier\": \"vip@example.com\",\n  \"access\": \"allow\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('assignmentId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Deny a user",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/flags/{{flagId}}/assignments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "flags",
+                "{{flagId}}",
+                "assignments"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"environment_id\": \"{{envId}}\",\n  \"user_identifier\": \"blocked@example.com\",\n  \"access\": \"deny\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List assignments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/flags/{{flagId}}/assignments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "flags",
+                "{{flagId}}",
+                "assignments"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Remove assignment",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/assignments/{{assignmentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assignments",
+                "{{assignmentId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SDK (uses X-SDK-Key, no JWT)",
+      "item": [
+        {
+          "name": "Evaluate one flag",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-SDK-Key",
+                "value": "{{sdkKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/sdk/evaluate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "sdk",
+                "evaluate"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"flag_key\": \"new-checkout\",\n  \"user_id\": \"user-123\"\n}"
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Evaluate all flags for a user",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-SDK-Key",
+                "value": "{{sdkKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/sdk/flags",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "sdk",
+                "flags"
+              ],
+              "query": [
+                {
+                  "key": "user_id",
+                  "value": "user-123"
+                }
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/analytics/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "analytics",
+                "dashboard"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Usage (all flags, 7 days)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/analytics/usage",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "analytics",
+                "usage"
+              ],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "7"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Usage (one flag)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/analytics/usage",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "analytics",
+                "usage"
+              ],
+              "query": [
+                {
+                  "key": "flag_id",
+                  "value": "{{flagId}}"
+                },
+                {
+                  "key": "days",
+                  "value": "14"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Audit Logs",
+      "item": [
+        {
+          "name": "Search audit logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/audit-logs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "audit-logs"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "25"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const items = pm.response.json().items;",
+                  "if (items.length) pm.collectionVariables.set('auditId', items[0].id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Audit logs for a flag",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/audit-logs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "audit-logs"
+              ],
+              "query": [
+                {
+                  "key": "flag_id",
+                  "value": "{{flagId}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
